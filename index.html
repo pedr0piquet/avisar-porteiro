@@ -168,69 +168,45 @@
       : sel.value;
   }
 
-  function buildMsg() {
-    const nome  = document.getElementById('nome').value.trim();
-    const num   = document.getElementById('num').value.trim();
-    const marca = document.getElementById('marca').value === 'outro'
-      ? document.getElementById('marca-outro').value.trim()
-      : document.getElementById('marca').value;
-    const modeloSelect = document.getElementById('modelo');
-    const modelo = modeloSelect.style.display === 'none'
-      ? document.getElementById('modelo-outro').value.trim()
-      : (modeloSelect.value === 'outro'
-          ? document.getElementById('modelo-outro').value.trim()
-          : modeloSelect.value);
-    const cor   = document.getElementById('cor').value.trim();
-    const eta   = document.getElementById('eta').value.trim();
+// devolve o valor do select, ou do campo de texto quando é "Outro..."
+function valorOutro(selectId, outroId) {
+  const sel = document.getElementById(selectId);
+  const usaOutro = sel.value === 'outro' || sel.style.display === 'none';
+  return usaOutro ? document.getElementById(outroId).value.trim() : sel.value;
+}
 
-    if (!nome && !num && !marca && !modelo && !cor) return null;
+// lê todos os campos de uma vez
+function lerCampos() {
+  return {
+    nome: document.getElementById('nome').value.trim(),
+    num: document.getElementById('num').value.trim(),
+    marca: valorOutro('marca', 'marca-outro'),
+    modelo: valorOutro('modelo', 'modelo-outro'),
+    cor: document.getElementById('cor').value.trim(),
+    eta: document.getElementById('eta').value.trim(),
+    porteiro: normalizarNumero(document.getElementById('porteiro').value),
+  };
+}
 
-    let msg = `O uber ${nome || '[nome]'} vai entrar para a casa ${num || '[num]'} num ${marca || '[marca]'} ${modelo || '[modelo]'} ${cor || '[cor]'}`;
-    if (eta) msg += ` em aproximadamente ${eta} minutos`;
-    msg += '.';
-    return msg;
-  }
+function buildMsg(c = lerCampos()) {
+  if (!c.nome && !c.num && !c.marca && !c.modelo && !c.cor) return null;
+  let msg = `O uber ${c.nome || '[nome]'} vai entrar para a casa ${c.num || '[num]'} num ${c.marca || '[marca]'} ${c.modelo || '[modelo]'} ${c.cor || '[cor]'}`;
+  if (c.eta) msg += ` em aproximadamente ${c.eta} minutos`;
+  return msg + '.';
+}
 
-  function updatePreview() {
-    const msg     = buildMsg();
-    const preview = document.getElementById('preview');
-    if (msg) {
-      preview.textContent = msg;
-      preview.style.display = 'block';
-    } else {
-      preview.style.display = 'none';
-    }
-  }
+function enviar() {
+  const c = lerCampos();
+  const erro = document.getElementById('erro');
 
-  ['nome', 'num', 'cor', 'eta', 'marca-outro', 'modelo-outro'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updatePreview);
-  });
-
-  function enviar() {
-    const nome  = document.getElementById('nome').value.trim();
-    const num   = document.getElementById('num').value.trim();
-    const marca = document.getElementById('marca').value === 'outro'
-      ? document.getElementById('marca-outro').value.trim()
-      : document.getElementById('marca').value;
-    const modeloSelect = document.getElementById('modelo');
-    const modelo = modeloSelect.style.display === 'none'
-      ? document.getElementById('modelo-outro').value.trim()
-      : (modeloSelect.value === 'outro'
-          ? document.getElementById('modelo-outro').value.trim()
-          : modeloSelect.value);
-    const cor  = document.getElementById('cor').value.trim();
-    const erro = document.getElementById('erro');
-    const numeroPorteiro = normalizarNumero(document.getElementById('porteiro').value);
-
-  if (!nome || !num || !marca || !modelo || !cor || numeroPorteiro.length < 12) {
+  if (!c.nome || !c.num || !c.marca || !c.modelo || !c.cor || c.porteiro.length < 12) {
     erro.style.display = 'block';
     return;
   }
   erro.style.display = 'none';
 
-    const msg = buildMsg();
-    window.open(`https://wa.me/${NUMERO_PORTEIRO}?text=${encodeURIComponent(msg)}`, '_blank');
-  }
+  window.open(`https://wa.me/${c.porteiro}?text=${encodeURIComponent(buildMsg(c))}`, '_blank');
+}
 </script>
 </body>
 </html>
