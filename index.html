@@ -15,6 +15,12 @@
   </div>
 
   <div class="fields">
+
+    <div class="field">
+      <label>WhatsApp do porteiro</label>
+      <input type="tel" id="porteiro" placeholder="Ex: (21) 987654321" inputmode="tel" autocomplete="off" />
+    </div>
+
     <div class="field">
       <label>Nome do motorista</label>
       <input type="text" id="nome" placeholder="Ex: João" autocomplete="off" />
@@ -57,7 +63,7 @@
 
     <div class="field">
       <label>ETA <span class="optional-tag">(opcional)</span></label>
-      <input type="text" id="eta" placeholder="Ex: 5 minutos" autocomplete="off" />
+      <input type="text" id="eta" placeholder="Ex: 5" autocomplete="off" />
     </div>
   </div>
 
@@ -77,8 +83,22 @@
 </div>
 <script>
   // ─── CONFIGURAÇÃO ─────────────────────────────────────────────────────────
-  // Troque pelo número do porteiro com DDI (só números, sem espaços ou sinais)
-  const NUMERO_PORTEIRO = "5521970785219";
+  const CHAVE_PORTEIRO = 'porteiro_numero';
+
+// deixa só dígitos e assume Brasil (55) se vier sem DDI
+  function normalizarNumero(raw) {
+    let d = raw.replace(/\D/g, '').replace(/^0+/, '');
+    if (d.length === 10 || d.length === 11) d = '55' + d;
+    return d;
+  }
+
+  // lembra o número entre acessos (só no navegador do usuário)
+  const campoPorteiro = document.getElementById('porteiro');
+  try { campoPorteiro.value = localStorage.getItem(CHAVE_PORTEIRO) || ''; } catch (e) {}
+  campoPorteiro.addEventListener('input', () => {
+    try { localStorage.setItem(CHAVE_PORTEIRO, campoPorteiro.value); } catch (e) {}
+  });
+
 
   // Adicione o carro que quiser
   const CARROS = {
@@ -200,13 +220,14 @@
           : modeloSelect.value);
     const cor  = document.getElementById('cor').value.trim();
     const erro = document.getElementById('erro');
+    const numeroPorteiro = normalizarNumero(document.getElementById('porteiro').value);
 
-    if (!nome || !num || !marca || !modelo || !cor) {
-      erro.style.display = 'block';
-      return;
-    }
+  if (!nome || !num || !marca || !modelo || !cor || numeroPorteiro.length < 12) {
+    erro.style.display = 'block';
+    return;
+  }
+  erro.style.display = 'none';
 
-    erro.style.display = 'none';
     const msg = buildMsg();
     window.open(`https://wa.me/${NUMERO_PORTEIRO}?text=${encodeURIComponent(msg)}`, '_blank');
   }
